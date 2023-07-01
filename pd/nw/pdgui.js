@@ -1888,6 +1888,15 @@ function menu_saveas(name) {
 
 exports.menu_saveas = menu_saveas;
 
+function autosave() {
+    post("autosave function started");
+    pdsend("pd autosave")
+    post("autosave function exited");
+}
+  
+// Call the function every 5 minutes (300,000 milliseconds)
+setInterval(autosave, 3000);
+
 function gui_canvas_print(name, initfile, initdir) {
     // AG: The print dialog presents its own file picker anyway if PDF
     // output is chosen, and just ignores the settings for pdf_path. So

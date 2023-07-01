@@ -14,6 +14,7 @@ file format as in the dialog window for data.
 #include <stdlib.h>
 #include <stdio.h>
 #include "m_pd.h"
+#include "m_imp.h"
 #include "g_canvas.h"
 #include <string.h>
 
@@ -965,6 +966,7 @@ extern void canvasgop_checksize(t_canvas *x);
 static void canvas_savetofile(t_canvas *x, t_symbol *filename, t_symbol *dir,
     t_floatarg fdestroy)
 {
+    
     t_binbuf *b = binbuf_new();
     canvas_savetemplatesto(x, b, 1);
     canvas_saveto(x, b);
@@ -987,6 +989,28 @@ static void canvas_savetofile(t_canvas *x, t_symbol *filename, t_symbol *dir,
             vmess(&x->gl_pd, gensym("menuclose"), "f", 1.);
     }
     binbuf_free(b);
+}
+
+
+// autosave
+void glob_autosave(t_pd *dummy)
+{
+    post("backend autosave function started");
+    t_canvas *x;
+        /* find all root canvases */
+    for (x = pd_this->pd_canvaslist; x; x = x->gl_next)
+    {
+        if (x->gl_dirty) {
+            post("canvas %s is dirty", x->gl_name->s_name);
+            post("saving %s to %s", x->gl_name, canvas_getdir(x));
+            canvas_savetofile(x, x->gl_name, canvas_getdir(x), 0);
+            post("saving completed of %s to %s", x->gl_name, canvas_getdir(x));
+        }  else {
+            post("canvas %s is not dirty", x->gl_name->s_name);
+        }
+        
+    }
+    post("backend autosave function exited");
 }
 
 void canvas_reload_ab(t_canvas *x);

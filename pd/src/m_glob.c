@@ -45,6 +45,7 @@ void glob_forward_files_from_secondary_instance(void);
 void glob_recent_files(t_pd *dummy);
 void glob_add_recent_file(t_pd *dummy, t_symbol *s);
 void glob_clear_recent_files(t_pd *dummy);
+void glob_autosave(t_pd *dummy);
 
 void alsa_resync( void);
 
@@ -222,6 +223,8 @@ void glob_init(void)
         gensym("clear-recent-files"), 0);
     class_addmethod(glob_pdobject, (t_method)glob_gui_busy, gensym("gui-busy"),
         A_DEFFLOAT, 0);
+    class_addmethod(glob_pdobject, (t_method)glob_autosave,
+        gensym("autosave"), 0);
 #ifdef UNIX
     class_addmethod(glob_pdobject, (t_method)glob_watchdog,
         gensym("watchdog"), 0);
