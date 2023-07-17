@@ -456,6 +456,11 @@
         "browser_path_tt": "Also scan help patches in the user-defined help path for searchable keywords (slower)",
         "browser_init": "prepare the help index at application start",
         "browser_init_tt": "If checked, prepare the index for the help browser already when the application starts"
+      },
+      "autosave": {
+        "autosave_title": "Autosave settings",
+        "autosave_tt": "automatically save the patch at regular intervals",
+        "autosave_interval": "autosave interval"
       }
     },
     "audio": {

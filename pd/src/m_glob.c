@@ -45,7 +45,7 @@ void glob_forward_files_from_secondary_instance(void);
 void glob_recent_files(t_pd *dummy);
 void glob_add_recent_file(t_pd *dummy, t_symbol *s);
 void glob_clear_recent_files(t_pd *dummy);
-void glob_autosave(t_pd *dummy);
+void glob_autosave(t_pd *dummy, t_symbol *s);
 
 void alsa_resync( void);
 
@@ -84,7 +84,7 @@ static void glob_perf(t_pd *dummy, float f)
 extern int sys_snaptogrid, sys_gridsize, sys_zoom,
     sys_autocomplete, sys_autocomplete_prefix, sys_autocomplete_relevance,
     sys_browser_doc, sys_browser_path, sys_browser_init,
-    sys_autopatch_yoffset;
+    sys_autopatch_yoffset, sys_autosave_value;
 extern t_symbol *sys_gui_preset;
 static void glob_gui_prefs(t_pd *dummy, t_symbol *s, int argc, t_atom *argv)
 {
@@ -99,16 +99,17 @@ static void glob_gui_prefs(t_pd *dummy, t_symbol *s, int argc, t_atom *argv)
     sys_browser_path = !!atom_getintarg(0, argc--, argv++);
     sys_browser_init = !!atom_getintarg(0, argc--, argv++);
     sys_autopatch_yoffset = atom_getintarg(0, argc--, argv++);
+    sys_autosave_value = atom_getintarg(0, argc--, argv++);
 }
 
 /* just the gui-preset, the save-zoom toggle and various help browser options for now */
 static void glob_gui_properties(t_pd *dummy)
 {
-    gui_vmess("gui_gui_properties", "xsiiiiiiiiii",
+    gui_vmess("gui_gui_properties", "xsiiiiiiiiiii",
         dummy,
         sys_gui_preset->s_name,
         sys_snaptogrid,
-	sys_gridsize,
+	    sys_gridsize,
         sys_zoom,
         sys_autocomplete,
         sys_autocomplete_prefix,
@@ -116,7 +117,13 @@ static void glob_gui_properties(t_pd *dummy)
         sys_browser_doc,
         sys_browser_path,
         sys_browser_init,
-        sys_autopatch_yoffset);
+        sys_autopatch_yoffset,
+        sys_autosave_value);
+}
+
+static void glob_autosave_value(t_pd *dummy)
+{
+    gui_vmess("gui_autosave_value", "xi", dummy, sys_autosave_value);
 }
 
 int sys_gui_busy;
@@ -224,7 +231,9 @@ void glob_init(void)
     class_addmethod(glob_pdobject, (t_method)glob_gui_busy, gensym("gui-busy"),
         A_DEFFLOAT, 0);
     class_addmethod(glob_pdobject, (t_method)glob_autosave,
-        gensym("autosave"), 0);
+        gensym("autosave"), A_SYMBOL, 0);
+    class_addmethod(glob_pdobject, (t_method)glob_autosave_value,
+        gensym("gui-autosave-value"), 0);
 #ifdef UNIX
     class_addmethod(glob_pdobject, (t_method)glob_watchdog,
         gensym("watchdog"), 0);

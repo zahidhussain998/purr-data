@@ -475,6 +475,19 @@ select {
               <input type="checkbox" id="browser_init" name="browser_init">
               <span data-i18n="prefs.gui.browser.browser_init"></span>
             </label>
+            <br/><br/>
+            <span data-i18n="prefs.gui.autosave.autosave_title"></span>
+            <br/>
+            <label data-i18n="[title]prefs.gui.autosave.autosave_tt">
+              <input type="checkbox" id="autosave"
+                     name="autosave"
+                     onchange="autosave_toggle(this.checked);">
+            <span data-i18n="prefs.gui.autosave.autosave_interval"></span></span>:
+            </label>
+            <input type="text"
+                   id="autosave_value"
+                   name="autosave_value"
+                   data-i18n="[title]prefs.gui.autosave.autosave_tt">
           </div>
         </div>
 
@@ -578,6 +591,14 @@ function get_bool_elem(elem) {
 function get_autopatch_yoffset() {
     if (get_bool_elem("autopatch_yoffset")) {
         return document.getElementById("autopatch_yoffset_value").value;
+    } else {
+        return "0";
+    }
+}
+
+function get_autosave_value() {
+    if (get_bool_elem("autosave")) {
+        return document.getElementById("autosave_value").value;
     } else {
         return "0";
     }
@@ -815,8 +836,10 @@ function apply(save_prefs) {
         get_bool_elem("browser_doc"),
         get_bool_elem("browser_path"),
         get_bool_elem("browser_init"),
-        get_autopatch_yoffset()
+        get_autopatch_yoffset(),
+        get_autosave_value(),
     );
+    pdgui.autosave(get_autosave_value());
     // Also send the browser config to the GUI, so that it will update the
     // help browser accordingly.
     pdgui.update_browser(
@@ -1083,9 +1106,14 @@ function autopatch_yoffset_toggle(checked) {
     document.getElementById("autopatch_yoffset").checked = checked;
 }
 
+function autosave_toggle(checked) {
+    document.getElementById("autosave_value").disabled = !checked;
+    document.getElementById("autosave").checked = checked;
+}
+
 function gui_prefs_callback(name, show_grid, grid_size, save_zoom,
     autocomplete, autocomplete_prefix, autocomplete_relevance,
-    browser_doc, browser_path, browser_init, autopatch_yoffset) {
+    browser_doc, browser_path, browser_init, autopatch_yoffset, autosave_value) {
     var s = document.getElementById("gui_preset");
 
     // ag: scan the css subdir for user-defined styles
@@ -1131,6 +1159,14 @@ function gui_prefs_callback(name, show_grid, grid_size, save_zoom,
         autopatch_yoffset_toggle(true);
     } else {
         autopatch_yoffset_toggle(false);
+    }
+
+    if (+autosave_value !== 0) {
+        document.getElementById("autosave_value").value =
+            autosave_value;
+        autosave_toggle(true);
+    } else {
+        autosave_toggle(false);
     }
 }
 

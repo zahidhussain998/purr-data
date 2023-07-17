@@ -17,6 +17,7 @@ file format as in the dialog window for data.
 #include "m_imp.h"
 #include "g_canvas.h"
 #include <string.h>
+#include <time.h>
 
 /* object to assist in saving state by abstractions */
 static t_class *savestate_class;
@@ -991,25 +992,60 @@ static void canvas_savetofile(t_canvas *x, t_symbol *filename, t_symbol *dir,
     binbuf_free(b);
 }
 
+    /* save a "root" canvas to a file; cf. canvas_saveto() which saves the
+    body (and which is called recursively.) */
+static void autosave_savetofile(t_canvas *x, t_symbol *filename, t_symbol *dir,
+    t_floatarg fdestroy)
+{
+    post("savetofile %s/%s", dir->s_name, filename->s_name);
+    t_binbuf *b = binbuf_new();
+    canvas_savetemplatesto(x, b, 1);
+    canvas_saveto(x, b);
+    if (binbuf_write(b, filename->s_name, dir->s_name, 0)) sys_ouch();
+    else
+    {    
+        // /* if not an abstraction, reset title bar and directory */ 
+        // if (!x->gl_owner)
+        // {
+        //     canvas_rename(x, filename, dir);
+        //     /* update window list in case Save As changed the window name */
+        //     canvas_updatewindowlist(); 
+        // }
+        post("saved to: %s/%s", dir->s_name, filename->s_name);
+        // canvas_dirty(x, 0);
+        if (x->gl_isgraph)
+            canvasgop_checksize(x);
+        canvas_reload(filename, dir, &x->gl_gobj);
+        if (fdestroy != 0)
+            vmess(&x->gl_pd, gensym("menuclose"), "f", 1.);
+    }
+    binbuf_free(b);
+}
 
 // autosave
-void glob_autosave(t_pd *dummy)
+void glob_autosave(t_pd *dummy, t_symbol *dir)
 {
     post("backend autosave function started");
     t_canvas *x;
-        /* find all root canvases */
+    
+    // Seed the random number generator
+    srand(time(NULL));
+    
     for (x = pd_this->pd_canvaslist; x; x = x->gl_next)
     {
         if (x->gl_dirty) {
+            // Generate a random name for the canvas
+            char filename[32];
+            sprintf(filename, "canvas_%d.pd", rand());
             post("canvas %s is dirty", x->gl_name->s_name);
-            post("saving %s to %s", x->gl_name, canvas_getdir(x));
-            canvas_savetofile(x, x->gl_name, canvas_getdir(x), 0);
-            post("saving completed of %s to %s", x->gl_name, canvas_getdir(x));
-        }  else {
+            post("saving %s to %s", filename, dir->s_name);
+            gui_vmess("gui_autosave_details", "xs", x, filename);	
+            autosave_savetofile(x, gensym(filename), dir, 0);
+        } else {
             post("canvas %s is not dirty", x->gl_name->s_name);
         }
-        
     }
+    
     post("backend autosave function exited");
 }
 

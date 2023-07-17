@@ -42,7 +42,7 @@
 #define snprintf sprintf_s
 #endif
 
-int sys_defeatrt, sys_autopatch_yoffset, sys_snaptogrid = 1, sys_gridsize = 10,
+int sys_defeatrt, sys_autopatch_yoffset, sys_snaptogrid, sys_autosave_value = 1, sys_gridsize = 10,
     sys_zoom, sys_autocomplete = 1, sys_autocomplete_prefix,
     sys_autocomplete_relevance = 1,
     sys_browser_doc = 1, sys_browser_path, sys_browser_init;
@@ -724,6 +724,8 @@ void sys_loadpreferences( void)
         sscanf(prefbuf, "%d", &sys_browser_init);
     if (sys_getpreference("autopatch_yoffset", prefbuf, MAXPDSTRING))
         sscanf(prefbuf, "%d", &sys_autopatch_yoffset);
+    if (sys_getpreference("autosave_value", prefbuf, MAXPDSTRING))
+    sscanf(prefbuf, "%d", &sys_autosave_value);
     if (sys_getpreference("guipreset", prefbuf, MAXPDSTRING))
     {
         char preset_buf[MAXPDSTRING];
@@ -913,6 +915,8 @@ void glob_savepreferences(t_pd *dummy)
     sys_putpreference("browser_init", buf1);
     sprintf(buf1, "%d", sys_autopatch_yoffset);
     sys_putpreference("autopatch_yoffset", buf1);
+    sprintf(buf1, "%d", sys_autosave_value);
+    sys_putpreference("autosave_value", buf1);
     sys_putpreference("guipreset", sys_gui_preset->s_name);
     sys_putpreference("flags", 
         (sys_flags ? sys_flags->s_name : ""));

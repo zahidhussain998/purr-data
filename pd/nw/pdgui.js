@@ -5,6 +5,7 @@ var lib_dir;
 var help_path, browser_doc, browser_path, browser_init;
 var autocomplete, autocomplete_prefix, autocomplete_relevance;
 var pd_engine_id;
+var autosave_timer;
 
 exports.autocomplete_enabled = function() {
     return autocomplete;
@@ -1888,14 +1889,24 @@ function menu_saveas(name) {
 
 exports.menu_saveas = menu_saveas;
 
-function autosave() {
-    post("autosave function started");
-    pdsend("pd autosave")
-    post("autosave function exited");
+const autosave_folder = cache_basename + "autosave/";
+
+// setTimeout(() => {
+//     pdsend("pd gui-autosave-value");
+// }, 0); 
+
+function autosave(autosave_value) {
+    autosave_value = parseInt(autosave_value);
+    if (autosave_timer != null)
+        clearInterval(autosave_timer);
+    post("autosave timer value " + autosave_value);
+    if (autosave_value === 0) return;
+    autosave_timer = setInterval(function() {
+        pdsend("pd autosave", autosave_folder);
+    }, autosave_value * 60 * 1000);
 }
-  
-// Call the function every 5 minutes (300,000 milliseconds)
-setInterval(autosave, 3000);
+
+exports.autosave = autosave;
 
 function gui_canvas_print(name, initfile, initdir) {
     // AG: The print dialog presents its own file picker anyway if PDF
@@ -7039,11 +7050,38 @@ function gui_midi_properties(gfxstub, sys_indevs, sys_outdevs,
 function gui_gui_properties(dummy, name, show_grid, grid_size, save_zoom,
                             autocomplete, autocomplete_prefix, autocomplete_relevance,
                             browser_doc, browser_path, browser_init,
-                            autopatch_yoffset) {
+                            autopatch_yoffset, autosave_value) {
     if (dialogwin["prefs"] !== null) {
         dialogwin["prefs"].window.gui_prefs_callback(name, show_grid, grid_size,
             save_zoom, autocomplete, autocomplete_prefix, autocomplete_relevance,
-            browser_doc, browser_path, browser_init, autopatch_yoffset);
+            browser_doc, browser_path, browser_init, autopatch_yoffset, autosave_value);
+    }
+}
+
+function gui_autosave_value(dummy, autosave_value) {
+    autosave(autosave_value);
+}
+
+function gui_autosave_details(dummy, canvasName) {
+    post("autosave_details: " + canvasName);
+    const filename = 'autosave.txt';
+    // Create the folder if it doesn't exist
+    if (!fs.existsSync(autosave_folder)) {
+        post(autosave_folder + " not present, creating one");
+        fs.mkdirSync(autosave_folder, { recursive: true });
+        post(autosave_folder + " created");
+    }
+    post(autosave_folder + " exists");
+    // Check if the file exists
+    const filePath = path.join(autosave_folder, filename);
+    const fileExists = fs.existsSync(filePath);
+    // Create or append to the file
+    if (fileExists) {
+        // Append filename to the existing file
+        fs.appendFileSync(filePath, `\n${canvasName}`);
+    } else {
+        // Create a new file and write the filename
+        fs.writeFileSync(filePath, canvasName);
     }
 }
 
