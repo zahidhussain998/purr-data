@@ -1025,7 +1025,6 @@ static void autosave_savetofile(t_canvas *x, t_symbol *filename, t_symbol *dir,
 // autosave
 void glob_autosave(t_pd *dummy, t_symbol *dir)
 {
-    post("backend autosave function started");
     t_canvas *x;
     
     // Seed the random number generator
@@ -1038,15 +1037,12 @@ void glob_autosave(t_pd *dummy, t_symbol *dir)
             char filename[32];
             sprintf(filename, "canvas_%d.pd", rand());
             post("canvas %s is dirty", x->gl_name->s_name);
-            post("saving %s to %s", filename, dir->s_name);
-            gui_vmess("gui_autosave_details", "xs", x, filename);	
+            gui_vmess("gui_autosave_details", "sss", canvas_getdir(x)->s_name, x->gl_name->s_name, filename);	
             autosave_savetofile(x, gensym(filename), dir, 0);
         } else {
             post("canvas %s is not dirty", x->gl_name->s_name);
         }
     }
-    
-    post("backend autosave function exited");
 }
 
 void canvas_reload_ab(t_canvas *x);

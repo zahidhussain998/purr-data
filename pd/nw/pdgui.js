@@ -127,6 +127,7 @@ exports.nw_os_is_windows = nw_os_is_windows;
 
 var fs = require("fs");
 var path = require("path");
+var os = require("os");
 var dive = require("./dive.js"); // small module to recursively search dirs
 var elasticlunr = require("./elasticlunr.js"); // lightweight full-text search engine in JavaScript, cf. https://github.com/weixsong/elasticlunr.js/
 elasticlunr.clearStopWords();
@@ -1889,11 +1890,17 @@ function menu_saveas(name) {
 
 exports.menu_saveas = menu_saveas;
 
-const autosave_folder = cache_basename + "autosave/";
+const homedir = os.homedir();
+const autosave_folder = nw_os_is_windows
+? path.join(homedir, "AppData", "Roaming", "Purr-Data", "autosave")
+: path.join(homedir, ".purr-data", "autosave");
 
-// setTimeout(() => {
-//     pdsend("pd gui-autosave-value");
-// }, 0); 
+
+// Engine is fully initialised and all patches are loaded,
+function gui_engine_ready() {
+    pdsend("pd gui-autosave-interval");
+    post("Engine ready");
+}
 
 function autosave(autosave_value) {
     autosave_value = parseInt(autosave_value);
@@ -1903,7 +1910,7 @@ function autosave(autosave_value) {
     if (autosave_value === 0) return;
     autosave_timer = setInterval(function() {
         pdsend("pd autosave", autosave_folder);
-    }, autosave_value * 60 * 1000);
+    }, autosave_value * 5 * 1000);
 }
 
 exports.autosave = autosave;
@@ -7058,31 +7065,47 @@ function gui_gui_properties(dummy, name, show_grid, grid_size, save_zoom,
     }
 }
 
-function gui_autosave_value(dummy, autosave_value) {
+function gui_autosave_interval(autosave_value) {
     autosave(autosave_value);
 }
 
-function gui_autosave_details(dummy, canvasName) {
-    post("autosave_details: " + canvasName);
-    const filename = 'autosave.txt';
+function gui_autosave_details(origDirPath, origCanvasName, autosaveCanvasName) {
+    post("gui_autosave_details: " + dirpath + " " + canvasName);
+    const jsonFilePath = autosave_folder + "/" + "autosave.json";
+    const origCanvasFullPath = origDirPath + "/" + origCanvasName;
+    const autosaveCanvasFullPath = autosave_folder + "/" + autosaveCanvasName;
+
     // Create the folder if it doesn't exist
     if (!fs.existsSync(autosave_folder)) {
-        post(autosave_folder + " not present, creating one");
-        fs.mkdirSync(autosave_folder, { recursive: true });
-        post(autosave_folder + " created");
+        fs.mkdirSync(autosave_folder, {recursive: true});
     }
-    post(autosave_folder + " exists");
-    // Check if the file exists
-    const filePath = path.join(autosave_folder, filename);
-    const fileExists = fs.existsSync(filePath);
     // Create or append to the file
-    if (fileExists) {
-        // Append filename to the existing file
-        fs.appendFileSync(filePath, `\n${canvasName}`);
+    if (fs.existsSync(jsonFilePath)) {
+        const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+        data = JSON.parse(jsonData);
     } else {
-        // Create a new file and write the filename
-        fs.writeFileSync(filePath, canvasName);
+        data = {};
     }
+
+    // Add the new data
+    if (data[origCanvasFullPath] !== undefined) {
+        const oldAutosaveCanvasFullPath = data[origCanvasFullPath];
+        try {
+            if (fs.existsSync(oldAutosaveCanvasFullPath)) {
+              fs.unlinkSync(oldAutosaveCanvasFullPath);
+              console.log('File deleted successfully.');
+            } else {
+              console.log('File does not exist.');
+            }
+          } catch (err) {
+            console.error('Error occurred while deleting the file:', err);
+          }
+    }
+
+    data[origCanvasFullPath] = autosaveCanvasFullPath; 
+
+    // Write data to the JSON file
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 function gui_path_properties(dummy, use_stdpath, verbose, path_array) {

@@ -251,6 +251,7 @@ void glob_initfromgui(void *dummy, t_symbol *s, int argc, t_atom *argv)
     }
     namelist_free(sys_messagelist);
     sys_messagelist = 0;
+    gui_vmess("gui_engine_ready", "");
 }
 
 
