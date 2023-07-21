@@ -1898,8 +1898,32 @@ const autosave_folder = nw_os_is_windows
 
 // Engine is fully initialised and all patches are loaded,
 function gui_engine_ready() {
-    pdsend("pd gui-autosave-interval");
     post("Engine ready");
+    pdsend("pd gui-autosave-interval");
+    autosaveRecover();
+}
+
+function autosaveRecover() {
+    post("autorecover called");
+    const jsonFilePath = autosave_folder + "/" + "autosave.json";
+
+    // Create the folder if it doesn't exist
+    if (!fs.existsSync(autosave_folder)) return;
+    // Create or append to the file
+    if (!fs.existsSync(jsonFilePath)) return;
+
+    const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+    const data = JSON.parse(jsonData);
+
+    // Open pd files
+    for (const key in data) {
+        const filepath = data[key];
+        const dirnameOnly = path.dirname(filepath);
+        const filenameOnly = path.basename(filepath);
+        post("filename: " + filenameOnly + "dirname: " + dirnameOnly);
+        doc_open(dirnameOnly, filenameOnly);
+    }
+    post("Done opening");
 }
 
 function autosave(autosave_value) {
@@ -7070,7 +7094,7 @@ function gui_autosave_interval(autosave_value) {
 }
 
 function gui_autosave_details(origDirPath, origCanvasName, autosaveCanvasName) {
-    post("gui_autosave_details: " + dirpath + " " + canvasName);
+    post("gui_autosave_details: " + origDirPath + " " + origCanvasName + " " + autosaveCanvasName);
     const jsonFilePath = autosave_folder + "/" + "autosave.json";
     const origCanvasFullPath = origDirPath + "/" + origCanvasName;
     const autosaveCanvasFullPath = autosave_folder + "/" + autosaveCanvasName;
@@ -7079,15 +7103,14 @@ function gui_autosave_details(origDirPath, origCanvasName, autosaveCanvasName) {
     if (!fs.existsSync(autosave_folder)) {
         fs.mkdirSync(autosave_folder, {recursive: true});
     }
+    let data = {};
     // Create or append to the file
     if (fs.existsSync(jsonFilePath)) {
         const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
         data = JSON.parse(jsonData);
-    } else {
-        data = {};
     }
 
-    // Add the new data
+    // Replace
     if (data[origCanvasFullPath] !== undefined) {
         const oldAutosaveCanvasFullPath = data[origCanvasFullPath];
         try {
@@ -7102,10 +7125,32 @@ function gui_autosave_details(origDirPath, origCanvasName, autosaveCanvasName) {
           }
     }
 
+    // Add new Data
     data[origCanvasFullPath] = autosaveCanvasFullPath; 
 
     // Write data to the JSON file
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    fs.writeFileSync(jsonFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+function gui_canvas_saved(oldDirPath, oldFileName, newDirPath, newFileName) {
+    post("gui_canvas_saved: " + oldDirPath + " " + oldFileName + " " + newDirPath + " " + newFileName);
+    const jsonFilePath = autosave_folder + "/" + "autosave.json";
+    const origCanvasFullPath = oldDirPath + "/" + oldFileName;
+    const newCanvasFullPath = newDirPath + "/" + newFileName;
+    // Create the folder if it doesn't exist
+    if (!fs.existsSync(autosave_folder)) return;
+    if (!fs.existsSync(jsonFilePath)) return;
+    
+    const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+    const data = JSON.parse(jsonData);
+    
+    //Replace
+    const oldAutosaveCanvasFullPath = data[origCanvasFullPath];
+    delete data[origCanvasFullPath];
+    data[newCanvasFullPath] = oldAutosaveCanvasFullPath;
+
+    // Write data to the JSON file
+    fs.writeFileSync(jsonFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 function gui_path_properties(dummy, use_stdpath, verbose, path_array) {
