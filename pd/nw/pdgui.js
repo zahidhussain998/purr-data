@@ -1900,8 +1900,18 @@ const autosave_folder = nw_os_is_windows
 function gui_engine_ready() {
     post("Engine ready");
     pdsend("pd gui-autosave-interval");
-    autosaveRecover();
+    const jsonFilePath = autosave_folder + "/" + "autosave.json";
+    if (fs.existsSync(autosave_folder) && fs.existsSync(jsonFilePath)) {
+        showDialog();
+    }
 }
+
+function showDialog() {
+    var result = confirm("Autosaved files found. Do you want to recover?");
+    if (result) {
+        autosaveRecover();
+    }
+  }
 
 function autosaveRecover() {
     post("autorecover called");
