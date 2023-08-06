@@ -1907,11 +1907,39 @@ function gui_engine_ready() {
 }
 
 function showDialog() {
-    var result = confirm("Autosaved files found. Do you want to recover?");
+    const filenames = getFileNames();
+    const result = showConfirmationDialog(filenames);
     if (result) {
         autosaveRecover();
     }
-  }
+}
+
+function getFileNames() {
+    const jsonFilePath = autosave_folder + "/" + "autosave.json";
+
+    // Create the folder if it doesn't exist
+    if (!fs.existsSync(autosave_folder)) return [];
+    // Create or append to the file
+    if (!fs.existsSync(jsonFilePath)) return [];
+
+    const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+    const data = JSON.parse(jsonData);
+
+    const filenames = [];
+    for (const key in data) {
+        const filepath = data[key];
+        const filenameOnly = path.basename(filepath);
+        filenames.push(filenameOnly);
+    }
+    return filenames;
+}
+
+function showConfirmationDialog(filenames) {
+    const confirmationMessage = `Do you want to open the following autosaved files?\n\n${filenames.join('\n')}`;
+    const userConfirmed = confirm(confirmationMessage);
+
+    return userConfirmed;
+}
 
 function autosaveRecover() {
     post("autorecover called");

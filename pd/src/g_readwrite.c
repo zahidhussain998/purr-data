@@ -1033,11 +1033,20 @@ void glob_autosave(t_pd *dummy, t_symbol *dir)
     for (x = pd_this->pd_canvaslist; x; x = x->gl_next)
     {
         if (x->gl_dirty) {
-            // Generate a random name for the canvas
-            char filename[32];
-            sprintf(filename, "canvas_%d.pd", rand());
-            post("canvas %s is dirty", x->gl_name->s_name);
-            gui_vmess("gui_autosave_details", "sss", canvas_getdir(x)->s_name, x->gl_name->s_name, filename);	
+            // Generate a formatted timestamp
+            time_t current_time = time(NULL);
+            struct tm *timeinfo = localtime(&current_time);
+
+            char timestamp[64];  // Adjust the buffer size as needed
+            strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H-%M-%S", timeinfo);
+
+            char filename[128];  // Increased buffer size to accommodate timestamp and canvas name
+            char canvas_name[64];
+            strcpy(canvas_name, x->gl_name->s_name);
+
+            snprintf(filename, sizeof(filename), "%s_%s.pd", canvas_name, timestamp);
+            post("canvas %s is dirty", canvas_name);
+            gui_vmess("gui_autosave_details", "sss", canvas_getdir(x)->s_name, canvas_name, filename);	
             autosave_savetofile(x, gensym(filename), dir, 0);
         } else {
             post("canvas %s is not dirty", x->gl_name->s_name);
