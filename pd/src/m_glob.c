@@ -126,6 +126,16 @@ static void glob_autosave_interval()
     gui_vmess("gui_autosave_interval", "i", sys_autosave_interval);
 }
 
+// its defined in g_canvas.c
+extern int recovery_mode;
+
+static void glob_recover(void *dummy, t_symbol *name, t_symbol *dir) {
+    recovery_mode = 1;
+    post("From glob_recover: %s %s", name->s_name, dir->s_name);
+    glob_evalfile(0, name, dir);
+    recovery_mode = 0;
+}
+
 int sys_gui_busy;
 static void glob_gui_busy(void *dummy, t_float f)
 {
@@ -169,6 +179,8 @@ void glob_init(void)
         gensym("filename"), A_SYMBOL, A_SYMBOL, 0);
     class_addmethod(glob_pdobject, (t_method)glob_evalfile, gensym("open"),
         A_SYMBOL, A_SYMBOL, 0);
+    class_addmethod(glob_pdobject, (t_method)glob_recover, gensym("recover"),
+    A_SYMBOL, A_SYMBOL, 0);
     class_addmethod(glob_pdobject, (t_method)glob_quit, gensym("quit"),
         A_DEFFLOAT, 0);
     class_addmethod(glob_pdobject, (t_method)glob_verifyquit,

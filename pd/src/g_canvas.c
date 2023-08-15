@@ -399,6 +399,8 @@ void canvasgop__clickhook(t_scalehandle *sh, int newstate);
 void canvasgop__motionhook(t_scalehandle *sh,t_floatarg f1, t_floatarg f2);
 extern void glist_setlastxy(t_glist *gl, int xval, int yval);
 
+int recovery_mode = 0;
+
 void glist_init(t_glist *x)
 {
         /* zero out everyone except "pd" field */
@@ -407,6 +409,7 @@ void glist_init(t_glist *x)
     x->gl_valid = ++glist_valid;
     x->gl_xlabel = (t_symbol **)t_getbytes(0);
     x->gl_ylabel = (t_symbol **)t_getbytes(0);
+    x->gl_recovered = recovery_mode;
 
     //dpsaha@vt.edu gop resize (refactored by mathieu)
     x->x_handle = scalehandle_new((t_object *)x, x, 1,

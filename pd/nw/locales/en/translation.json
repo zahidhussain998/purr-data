@@ -460,7 +460,7 @@
       "autosave": {
         "autosave_title": "Autosave settings",
         "autosave_tt": "automatically save the patch at regular intervals",
-        "autosave_interval": "autosave interval"
+        "autosave_interval": "autosave interval (sec)"
       }
     },
     "audio": {

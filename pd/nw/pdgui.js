@@ -1822,7 +1822,7 @@ function build_file_dialog_string(obj) {
 
 exports.build_file_dialog_string = build_file_dialog_string;
 
-function gui_canvas_saveas(name, initfile, initdir, close_flag) {
+function gui_canvas_saveas(name, initfile, initdir, close_flag, is_recovered) {
     var input, chooser,
         span = patchwin[name].window.document.querySelector("#saveDialogSpan");
     if (!fs.existsSync(initdir)) {
@@ -1832,6 +1832,31 @@ function gui_canvas_saveas(name, initfile, initdir, close_flag) {
     if (initfile.slice(-3) !== ".pd") {
         initfile += ".pd";
     }
+
+    var keyWithBackupPath = null;
+    post("is_recovered in pdgui saveas: " + is_recovered);
+    if (is_recovered) {
+        const backup_path = path.join(initdir, initfile);
+        post("backup_path from pdgui saveas: " + backup_path);
+        const jsonFilePath = autosave_folder + "/" + "autosave.json";
+        if (!fs.existsSync(autosave_folder)) return;
+        if (!fs.existsSync(jsonFilePath)) return;
+        
+        const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+        const data = JSON.parse(jsonData);
+        // search data for backup_path values
+        keyWithBackupPath = findKeyByValue(data, backup_path);
+        if (keyWithBackupPath !== null) {
+            const dirnameOnly = path.dirname(keyWithBackupPath);
+            const filenameOnly = path.basename(keyWithBackupPath);
+            post(dirnameOnly + " " + filenameOnly);
+            initfile = filenameOnly;
+            initdir = dirnameOnly;
+        } else {
+            post("No key with backup_path value found.");
+        }
+    }
+    post(initdir + " " + initfile);
     // This is complicated because of a bug... see build_file_dialog_string
 
     // NOTE ag: The original code had nwworkingdir set to path.join(initdir,
@@ -1856,7 +1881,7 @@ function gui_canvas_saveas(name, initfile, initdir, close_flag) {
     span.innerHTML = input;
     chooser = patchwin[name].window.document.querySelector("#saveDialog");
     chooser.onchange = function() {
-        saveas_callback(name, this.value, close_flag);
+        saveas_callback(name, this.value, keyWithBackupPath, close_flag);
         // reset value so that we can open the same file twice
         this.value = null;
         console.log("tried to save something");
@@ -1864,12 +1889,52 @@ function gui_canvas_saveas(name, initfile, initdir, close_flag) {
     chooser.click();
 }
 
-function saveas_callback(cid, file, close_flag) {
+function findKeyByValue(obj, value) {
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key) && obj[key] === value) {
+            return key;
+        }
+    }
+    return null;
+}
+
+function saveas_callback(cid, file, recover_map_key, close_flag) {
     var filename = defunkify_windows_path(file),
         directory = path.dirname(filename),
         basename = path.basename(filename);
     // It probably isn't possible to arrive at the callback with an
     // empty string.  But I've only tested on Debian so far...
+    if (recover_map_key !== null) {
+        const jsonFilePath = autosave_folder + "/" + "autosave.json";
+        if (!fs.existsSync(autosave_folder)) return;
+        if (!fs.existsSync(jsonFilePath)) return;
+
+        const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+        let data = JSON.parse(jsonData);
+
+        // Assuming recover_map_key is the key you want to use
+        if (data.hasOwnProperty(recover_map_key)) {
+            const filePathToDelete = data[recover_map_key];
+
+            // Delete the file from the filesystem
+            if (fs.existsSync(filePathToDelete)) {
+                fs.unlinkSync(filePathToDelete);
+                post("File deleted:", filePathToDelete);
+            } else {
+                post("File not found:", filePathToDelete);
+            }
+
+            // Delete the key from the data object
+            delete data[recover_map_key];
+
+            // Save the modified data back to the JSON file
+            const updatedJsonData = JSON.stringify(data, null, 2);
+            fs.writeFileSync(jsonFilePath, updatedJsonData, 'utf-8');
+            post("Key deleted and JSON saved.");
+        } else {
+            post("Key not found in data.");
+        }
+    }
     if (filename === null) {
         return;
     }
@@ -1958,8 +2023,9 @@ function autosaveRecover() {
         const filepath = data[key];
         const dirnameOnly = path.dirname(filepath);
         const filenameOnly = path.basename(filepath);
-        post("filename: " + filenameOnly + "dirname: " + dirnameOnly);
-        doc_open(dirnameOnly, filenameOnly);
+        post("filename: " + enquote(defunkify_windows_path(filenameOnly)) + " dirname: " + enquote(defunkify_windows_path(path.normalize(dirnameOnly))));
+        pdsend("pd recover", enquote(defunkify_windows_path(filenameOnly)),
+            enquote(defunkify_windows_path(path.normalize(dirnameOnly))));
     }
     post("Done opening");
 }

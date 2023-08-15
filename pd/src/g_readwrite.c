@@ -1079,12 +1079,12 @@ static void canvas_menusaveas(t_canvas *x, t_floatarg fdestroy)
 {
     t_canvas *x2 = canvas_getrootfor(x);
     if(!x->gl_isab)
-        gui_vmess("gui_canvas_saveas", "xssi",
+        gui_vmess("gui_canvas_saveas", "xssii",
             x2,
-            (strncmp(x2->gl_name->s_name, "Untitled", 8) ?
+            (strncmp(x2->gl_name->s_name, "Untitled", 8) || x2->gl_recovered ?
                 x2->gl_name->s_name : "title"),
             canvas_getdir(x2)->s_name,
-            fdestroy != 0);
+            fdestroy != 0, x->gl_recovered);
     else if(x->gl_dirty)
         canvas_save_ab(x2, fdestroy);
 }
@@ -1095,9 +1095,9 @@ static void canvas_menusave(t_canvas *x, t_floatarg fdestroy)
     char *name = x2->gl_name->s_name;
     if(!x->gl_isab)
     {
-        if (*name && strncmp(name, "Untitled", 8)
+        if (!x->gl_recovered && (*name && strncmp(name, "Untitled", 8) 
                 && (strlen(name) < 4 || strcmp(name + strlen(name)-4, ".pat")
-                    || strcmp(name + strlen(name)-4, ".mxt")))
+                    || strcmp(name + strlen(name)-4, ".mxt"))))
                 canvas_savetofile(x2, x2->gl_name, canvas_getdir(x2), fdestroy);
         else canvas_menusaveas(x2, fdestroy);
     }
