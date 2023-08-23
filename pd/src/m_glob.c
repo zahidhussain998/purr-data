@@ -131,7 +131,7 @@ extern int recovery_mode;
 
 static void glob_recover(void *dummy, t_symbol *name, t_symbol *dir) {
     recovery_mode = 1;
-    post("From glob_recover: %s %s", name->s_name, dir->s_name);
+    // post("From glob_recover: %s %s", name->s_name, dir->s_name);
     glob_evalfile(0, name, dir);
     recovery_mode = 0;
 }

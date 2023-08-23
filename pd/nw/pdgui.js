@@ -1834,10 +1834,10 @@ function gui_canvas_saveas(name, initfile, initdir, close_flag, is_recovered) {
     }
 
     var keyWithBackupPath = null;
-    post("is_recovered in pdgui saveas: " + is_recovered);
+    // post("is_recovered in pdgui saveas: " + is_recovered);
     if (is_recovered) {
         const backup_path = path.join(initdir, initfile);
-        post("backup_path from pdgui saveas: " + backup_path);
+        // post("backup_path from pdgui saveas: " + backup_path);
         const jsonFilePath = autosave_folder + "/" + "autosave.json";
         if (!fs.existsSync(autosave_folder)) return;
         if (!fs.existsSync(jsonFilePath)) return;
@@ -1849,14 +1849,14 @@ function gui_canvas_saveas(name, initfile, initdir, close_flag, is_recovered) {
         if (keyWithBackupPath !== null) {
             const dirnameOnly = path.dirname(keyWithBackupPath);
             const filenameOnly = path.basename(keyWithBackupPath);
-            post(dirnameOnly + " " + filenameOnly);
+            // post(dirnameOnly + " " + filenameOnly);
             initfile = filenameOnly;
             initdir = dirnameOnly;
         } else {
-            post("No key with backup_path value found.");
+            // post("No key with backup_path value found.");
         }
     }
-    post(initdir + " " + initfile);
+    // post(initdir + " " + initfile);
     // This is complicated because of a bug... see build_file_dialog_string
 
     // NOTE ag: The original code had nwworkingdir set to path.join(initdir,
@@ -1919,9 +1919,9 @@ function saveas_callback(cid, file, recover_map_key, close_flag) {
             // Delete the file from the filesystem
             if (fs.existsSync(filePathToDelete)) {
                 fs.unlinkSync(filePathToDelete);
-                post("File deleted:", filePathToDelete);
+                // post("File deleted:", filePathToDelete);
             } else {
-                post("File not found:", filePathToDelete);
+                // post("File not found:", filePathToDelete);
             }
 
             // Delete the key from the data object
@@ -1930,9 +1930,9 @@ function saveas_callback(cid, file, recover_map_key, close_flag) {
             // Save the modified data back to the JSON file
             const updatedJsonData = JSON.stringify(data, null, 2);
             fs.writeFileSync(jsonFilePath, updatedJsonData, 'utf-8');
-            post("Key deleted and JSON saved.");
+            // post("Key deleted and JSON saved.");
         } else {
-            post("Key not found in data.");
+            // post("Key not found in data.");
         }
     }
     if (filename === null) {
@@ -1963,7 +1963,7 @@ const autosave_folder = nw_os_is_windows
 
 // Engine is fully initialised and all patches are loaded,
 function gui_engine_ready() {
-    post("Engine ready");
+    // post("Engine ready");
     pdsend("pd gui-autosave-interval");
     const jsonFilePath = autosave_folder + "/" + "autosave.json";
     if (fs.existsSync(autosave_folder) && fs.existsSync(jsonFilePath)) {
@@ -2007,7 +2007,7 @@ function showConfirmationDialog(filenames) {
 }
 
 function autosaveRecover() {
-    post("autorecover called");
+    // post("autorecover called");
     const jsonFilePath = autosave_folder + "/" + "autosave.json";
 
     // Create the folder if it doesn't exist
@@ -2023,18 +2023,18 @@ function autosaveRecover() {
         const filepath = data[key];
         const dirnameOnly = path.dirname(filepath);
         const filenameOnly = path.basename(filepath);
-        post("filename: " + enquote(defunkify_windows_path(filenameOnly)) + " dirname: " + enquote(defunkify_windows_path(path.normalize(dirnameOnly))));
+        // post("filename: " + enquote(defunkify_windows_path(filenameOnly)) + " dirname: " + enquote(defunkify_windows_path(path.normalize(dirnameOnly))));
         pdsend("pd recover", enquote(defunkify_windows_path(filenameOnly)),
             enquote(defunkify_windows_path(path.normalize(dirnameOnly))));
     }
-    post("Done opening");
+    // post("Done opening");
 }
 
 function autosave(autosave_value) {
     autosave_value = parseInt(autosave_value);
     if (autosave_timer != null)
         clearInterval(autosave_timer);
-    post("autosave timer value " + autosave_value);
+    // post("autosave timer value " + autosave_value);
     if (autosave_value === 0) return;
     autosave_timer = setInterval(function() {
         pdsend("pd autosave", autosave_folder);
@@ -7198,7 +7198,7 @@ function gui_autosave_interval(autosave_value) {
 }
 
 function gui_autosave_details(origDirPath, origCanvasName, autosaveCanvasName) {
-    post("gui_autosave_details: " + origDirPath + " " + origCanvasName + " " + autosaveCanvasName);
+    // post("gui_autosave_details: " + origDirPath + " " + origCanvasName + " " + autosaveCanvasName);
     const jsonFilePath = autosave_folder + "/" + "autosave.json";
     const origCanvasFullPath = origDirPath + "/" + origCanvasName;
     const autosaveCanvasFullPath = autosave_folder + "/" + autosaveCanvasName;
@@ -7220,12 +7220,12 @@ function gui_autosave_details(origDirPath, origCanvasName, autosaveCanvasName) {
         try {
             if (fs.existsSync(oldAutosaveCanvasFullPath)) {
               fs.unlinkSync(oldAutosaveCanvasFullPath);
-              console.log('File deleted successfully.');
+            //   console.log('File deleted successfully.');
             } else {
-              console.log('File does not exist.');
+            //   console.log('File does not exist.');
             }
           } catch (err) {
-            console.error('Error occurred while deleting the file:', err);
+            // console.error('Error occurred while deleting the file:', err);
           }
     }
 
@@ -7237,7 +7237,7 @@ function gui_autosave_details(origDirPath, origCanvasName, autosaveCanvasName) {
 }
 
 function gui_canvas_saved(oldDirPath, oldFileName, newDirPath, newFileName) {
-    post("gui_canvas_saved: " + oldDirPath + " " + oldFileName + " " + newDirPath + " " + newFileName);
+    // post("gui_canvas_saved: " + oldDirPath + " " + oldFileName + " " + newDirPath + " " + newFileName);
     const jsonFilePath = autosave_folder + "/" + "autosave.json";
     const origCanvasFullPath = oldDirPath + "/" + oldFileName;
     const newCanvasFullPath = newDirPath + "/" + newFileName;

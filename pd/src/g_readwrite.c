@@ -997,7 +997,7 @@ static void canvas_savetofile(t_canvas *x, t_symbol *filename, t_symbol *dir,
 static void autosave_savetofile(t_canvas *x, t_symbol *filename, t_symbol *dir,
     t_floatarg fdestroy)
 {
-    post("savetofile %s/%s", dir->s_name, filename->s_name);
+    // post("savetofile %s/%s", dir->s_name, filename->s_name);
     t_binbuf *b = binbuf_new();
     canvas_savetemplatesto(x, b, 1);
     canvas_saveto(x, b);
@@ -1011,7 +1011,7 @@ static void autosave_savetofile(t_canvas *x, t_symbol *filename, t_symbol *dir,
         //     /* update window list in case Save As changed the window name */
         //     canvas_updatewindowlist(); 
         // }
-        post("saved to: %s/%s", dir->s_name, filename->s_name);
+        // post("saved to: %s/%s", dir->s_name, filename->s_name);
         // canvas_dirty(x, 0);
         if (x->gl_isgraph)
             canvasgop_checksize(x);
@@ -1045,11 +1045,11 @@ void glob_autosave(t_pd *dummy, t_symbol *dir)
             strcpy(canvas_name, x->gl_name->s_name);
 
             snprintf(filename, sizeof(filename), "%s_%s.pd", canvas_name, timestamp);
-            post("canvas %s is dirty", canvas_name);
+            // post("canvas %s is dirty", canvas_name);
             gui_vmess("gui_autosave_details", "sss", canvas_getdir(x)->s_name, canvas_name, filename);	
             autosave_savetofile(x, gensym(filename), dir, 0);
         } else {
-            post("canvas %s is not dirty", x->gl_name->s_name);
+            // post("canvas %s is not dirty", x->gl_name->s_name);
         }
     }
 }
