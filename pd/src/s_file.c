@@ -42,7 +42,7 @@
 #define snprintf sprintf_s
 #endif
 
-int sys_defeatrt, sys_autopatch_yoffset, sys_snaptogrid, sys_autosave_interval = 1, sys_gridsize = 10,
+int sys_defeatrt, sys_autopatch_yoffset, sys_snaptogrid, sys_autosave_interval = 10, sys_gridsize = 10,
     sys_zoom, sys_autocomplete = 1, sys_autocomplete_prefix,
     sys_autocomplete_relevance = 1,
     sys_browser_doc = 1, sys_browser_path, sys_browser_init;

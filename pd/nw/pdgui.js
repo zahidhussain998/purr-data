@@ -2036,7 +2036,7 @@ function autosave(autosave_value) {
     if (autosave_value === 0) return;
     autosave_timer = setInterval(function() {
         pdsend("pd autosave", autosave_folder);
-    }, autosave_value * 5 * 1000);
+    }, autosave_value * 1000);
 }
 
 exports.autosave = autosave;
