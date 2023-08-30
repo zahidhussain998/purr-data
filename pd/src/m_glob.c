@@ -126,7 +126,7 @@ static void glob_autosave_interval()
     gui_vmess("gui_autosave_interval", "i", sys_autosave_interval);
 }
 
-// its defined in g_canvas.c
+// this is defined in g_canvas.c
 extern int recovery_mode;
 
 static void glob_recover(void *dummy, t_symbol *name, t_symbol *dir) {

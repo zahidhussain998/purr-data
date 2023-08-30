@@ -1982,9 +1982,8 @@ function showDialog() {
 function getFileNames() {
     const jsonFilePath = autosave_folder + "/" + "autosave.json";
 
-    // Create the folder if it doesn't exist
+    //Check if "autosave.json" file exists
     if (!fs.existsSync(autosave_folder)) return [];
-    // Create or append to the file
     if (!fs.existsSync(jsonFilePath)) return [];
 
     const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
@@ -2010,9 +2009,8 @@ function autosaveRecover() {
     // post("autorecover called");
     const jsonFilePath = autosave_folder + "/" + "autosave.json";
 
-    // Create the folder if it doesn't exist
+    //Check if "autosave.json" file exists
     if (!fs.existsSync(autosave_folder)) return;
-    // Create or append to the file
     if (!fs.existsSync(jsonFilePath)) return;
 
     const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
@@ -7241,7 +7239,8 @@ function gui_canvas_saved(oldDirPath, oldFileName, newDirPath, newFileName) {
     const jsonFilePath = autosave_folder + "/" + "autosave.json";
     const origCanvasFullPath = oldDirPath + "/" + oldFileName;
     const newCanvasFullPath = newDirPath + "/" + newFileName;
-    // Create the folder if it doesn't exist
+    
+    //Check if "autosave.json" file exists
     if (!fs.existsSync(autosave_folder)) return;
     if (!fs.existsSync(jsonFilePath)) return;
     
