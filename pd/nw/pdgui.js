@@ -1969,7 +1969,7 @@ function gui_engine_ready() {
     if (!isAutosaveDataEmpty()) {
         setTimeout(() => {
             showDialog();
-        }, 4);
+        }, 7);
     }
 }
 
@@ -2020,7 +2020,6 @@ function deleteDirectoryRecursive(directoryPath) {
                 fs.unlinkSync(filePath); // Delete files
             }
         });
-        fs.rmdirSync(directoryPath); // Finally, delete the empty directory
     }
 }
 
@@ -2079,6 +2078,16 @@ function autosave(autosave_value) {
         clearInterval(autosave_timer);
     // post("autosave timer value " + autosave_value);
     if (autosave_value === 0) return;
+
+    // Check if the folder exists
+    if (!fs.existsSync(autosave_folder)) {
+        // If the folder doesn't exist, create it
+        fs.mkdirSync(autosave_folder);
+        // console.log('Autosave folder created.');
+    } else {
+        // console.log('Autosave folder already exists.');
+    }
+
     autosave_timer = setInterval(function() {
         pdsend("pd autosave", autosave_folder);
     }, autosave_value * 1000);
@@ -7283,7 +7292,6 @@ function gui_canvas_saved(oldDirPath, oldFileName, newDirPath, newFileName) {
     // post("gui_canvas_saved: " + oldDirPath + " " + oldFileName + " " + newDirPath + " " + newFileName);
     const jsonFilePath = autosave_folder + "/" + "autosave.json";
     const origCanvasFullPath = oldDirPath + "/" + oldFileName;
-    const newCanvasFullPath = newDirPath + "/" + newFileName;
     
     //Check if "autosave.json" file exists
     if (!fs.existsSync(autosave_folder)) return;
@@ -7291,12 +7299,21 @@ function gui_canvas_saved(oldDirPath, oldFileName, newDirPath, newFileName) {
     
     const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
     const data = JSON.parse(jsonData);
+
+    const oldAutosaveCanvasFullPath = data[origCanvasFullPath];
     
     //Replace
-    const oldAutosaveCanvasFullPath = data[origCanvasFullPath];
-    delete data[origCanvasFullPath];
-    data[newCanvasFullPath] = oldAutosaveCanvasFullPath;
-
+    try {
+        if (fs.existsSync(oldAutosaveCanvasFullPath)) {
+            fs.unlinkSync(oldAutosaveCanvasFullPath);
+            delete data[origCanvasFullPath];
+        //   console.log('File deleted successfully.');
+        } else {
+        //   console.log('File does not exist.');
+        }
+      } catch (err) {
+        // console.error('Error occurred while deleting the file:', err);
+      }
     // Write data to the JSON file
     fs.writeFileSync(jsonFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
