@@ -983,6 +983,7 @@ static void canvas_savetofile(t_canvas *x, t_symbol *filename, t_symbol *dir,
         }
         post("saved to: %s/%s", dir->s_name, filename->s_name);
         canvas_dirty(x, 0);
+        x->gl_recovered = 0;
         if (x->gl_isgraph)
             canvasgop_checksize(x);
         canvas_reload(filename, dir, &x->gl_gobj);

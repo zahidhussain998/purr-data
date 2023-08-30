@@ -1966,9 +1966,35 @@ function gui_engine_ready() {
     // post("Engine ready");
     pdsend("pd gui-autosave-interval");
     const jsonFilePath = autosave_folder + "/" + "autosave.json";
-    if (fs.existsSync(autosave_folder) && fs.existsSync(jsonFilePath)) {
-        showDialog();
+    if (!isAutosaveDataEmpty()) {
+        setTimeout(() => {
+            showDialog();
+        }, 4);
     }
+}
+
+function isAutosaveDataEmpty() {
+    const jsonFilePath = autosave_folder + "/" + "autosave.json";
+
+    if (!fs.existsSync(autosave_folder)) {
+        return true;
+    }
+
+    if (!fs.existsSync(jsonFilePath)) {
+        return true;
+    }
+
+    const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+
+    try {
+        const data = JSON.parse(jsonData);
+        if (typeof data === 'object' && Object.keys(data).length === 0) {
+            return true;
+        }
+    } catch (error) {
+        return true;
+    }
+    return false;
 }
 
 function showDialog() {
@@ -1976,6 +2002,25 @@ function showDialog() {
     const result = showConfirmationDialog(filenames);
     if (result) {
         autosaveRecover();
+    } else {
+        const userConfirmed = confirm("Warning: All autosaved files will be lost.\n\nAre you sure you want to proceed?");
+        if (userConfirmed) {
+            deleteDirectoryRecursive(autosave_folder);
+        }
+    }
+}
+
+function deleteDirectoryRecursive(directoryPath) {
+    if (fs.existsSync(directoryPath)) {
+        fs.readdirSync(directoryPath).forEach((file) => {
+            const filePath = `${directoryPath}/${file}`;
+            if (fs.lstatSync(filePath).isDirectory()) {
+                deleteDirectoryRecursive(filePath); // Recursively delete subdirectories
+            } else {
+                fs.unlinkSync(filePath); // Delete files
+            }
+        });
+        fs.rmdirSync(directoryPath); // Finally, delete the empty directory
     }
 }
 
